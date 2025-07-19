@@ -1,15 +1,17 @@
-from sqlalchemy import Column, Integer, DateTime
-from sqlalchemy.sql import func
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, declared_attr
+from sqlalchemy import Integer, String
 
 
-class BaseModelMixin(object):
-    id = Column(Integer, primary_key=True, autoincrement=True)
-
-    @declared_attr
-    def __tablename__(cls):
+class BaseTablenameMixin:
+    @declared_attr.directive
+    def __tablename__(cls) -> str:
         return cls.__name__.lower()
 
-    @declared_attr
-    def pk_column(cls):
-        return f'{cls.__tablename__}.id'
+
+class BaseModelMixin(BaseTablenameMixin):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+
+    @property
+    def pk_column(self) -> str:
+        return f"{self.__tablename__}.id"

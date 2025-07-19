@@ -5,12 +5,15 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, MetaData
 
 from .config import DATABASE_URL, DATABASE_URL_ASYNC
-from .mixins import BaseModelMixin
+from .mixins import BaseModelMixin, BaseTablenameMixin
 
-BaseModel = declarative_base(cls=BaseModelMixin)
+metadata = MetaData()
+
+BaseModel = declarative_base(cls=BaseModelMixin, metadata=metadata)
+BaseM2M = declarative_base(cls=BaseTablenameMixin, metadata=metadata)
 
 engine = create_async_engine(DATABASE_URL_ASYNC, poolclass=NullPool, isolation_level='AUTOCOMMIT')
 async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
