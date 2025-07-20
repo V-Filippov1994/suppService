@@ -1,16 +1,21 @@
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from src.router import router
+
 
 app = FastAPI()
 origins = ['*']
 app.include_router(router)
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    print(f"Request: {request.method} {request.url}", flush=True)
-    response = await call_next(request)
-    return response
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 if __name__ == '__main__':

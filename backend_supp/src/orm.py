@@ -1,5 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from .models import Fabric, Location, Equipment
 from .schemas import FabricCreate, LocationCreate, EquipmentCreate
 
@@ -16,6 +18,10 @@ class BaseORM:
             await self.session.rollback()
             raise e
 
+    async def get_objects_all(self, Object: object):
+        objects = await self.session.execute(select(Object))
+        return objects.scalars().all()
+
 
 class FabricORM(BaseORM):
     async def create_fabric(self, fabric_data: FabricCreate) -> Fabric:
@@ -23,6 +29,7 @@ class FabricORM(BaseORM):
         self.session.add(new_fabric)
         await self.commit_obj(new_fabric)
         return new_fabric
+
 
 
 class LocationORM(BaseORM):
@@ -42,3 +49,8 @@ class EquipmentORM(BaseORM):
         self.session.add(new_equipment)
         await self.commit_obj(new_equipment)
         return new_equipment
+
+    async def get_objects_all(self, Equipment):
+        stmt = select(Equipment).options(selectinload(Equipment.locations))
+        result = await self.session.execute(stmt)
+        return result.scalars().all()

@@ -36,3 +36,42 @@
     transform: rotate(360deg);
   }
 }
+
+h1 {
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  width: 80%;
+  margin: 50px auto;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.container .container-item {
+  border: 1px solid gray;
+  border-radius: 8px;
+  padding: 20px;
+  width: 27%;
+}
+
+.btn-primary {
+  width: 100%;
+  margin: 10px 0;
+}
+
+.container .container-item div,
+.container .container-item input,
+.container .container-item label,
+.container .container-item select {
+  margin-top: 10px;
+}
+
+.block-supp-list {
+  display: flex;
+  gap: 50px;
+  width: 80%;
+  margin: auto;
+  justify-content: space-around;
+}

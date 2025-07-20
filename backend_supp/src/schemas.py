@@ -34,7 +34,7 @@ class EquipmentCreate(BaseModel):
 class EquipmentRead(BaseModel):
     id: int
     name: str
-    location_ids: List[int]
+    locations: List[LocationRead]
 
 
 class LocationEquipmentCreate(BaseModel):

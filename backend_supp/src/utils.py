@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from .models import Equipment, Location, Fabric
-from .schemas import EquipmentRead
 
 
 
@@ -15,74 +14,86 @@ class ObjectType(str, Enum):
     equipment = Equipment.__name__.lower()
 
 
-def equipment_to_read(equipment: Equipment) -> EquipmentRead:
-    return EquipmentRead(
-        id=equipment.id,
-        name=equipment.name,
-        location_ids=[loc.id for loc in equipment.locations]
-    )
-
-
 async def get_tree(obj, session: AsyncSession):
-    visited = set()
-    result = {"parent": [], "children": []}
+    parent_chain, children_list  = [], []
 
     if isinstance(obj, Equipment):
-        await session.refresh(obj, ["locations"])
+        stmt = (
+            select(Equipment)
+            .options(
+                selectinload(Equipment.locations)
+                .selectinload(Location.fabric)
+            )
+            .where(Equipment.id == obj.id)
+        )
+        result = await session.execute(stmt)
+        obj = result.scalar_one()
+
+        for location in obj.locations:
+            parent_chain.append({
+                "id": location.id,
+                "type": "Location",
+                "name": location.name
+            })
+            if location.fabric:
+                parent_chain.append({
+                    "id": location.fabric.id,
+                    "type": "Fabric",
+                    "name": location.fabric.name
+                })
 
     elif isinstance(obj, Location):
-        await session.refresh(obj, ["fabric"])
-
-    async def recurse_parent(current):
-        nonlocal visited
-        if isinstance(current, Equipment):
-            stmt = (
-                select(Location)
-                .where(Location.id.in_([loc.id for loc in current.locations]))
-                .options(selectinload(Location.fabric))
+        stmt = (
+            select(Location)
+            .options(
+                selectinload(Location.fabric),
+                selectinload(Location.equipment)
             )
-            locations = (await session.execute(stmt)).scalars().all()
+            .where(Location.id == obj.id)
+        )
+        result = await session.execute(stmt)
+        obj = result.scalar_one()
 
-            for loc in locations:
-                if loc.id not in visited:
-                    visited.add(loc.id)
-                    result["parent"].append({"id": loc.id, "name": loc.name, "type": Location.__name__})
-                    await recurse_parent(loc)
+        if obj.fabric:
+            parent_chain.append({
+                "id": obj.fabric.id,
+                "type": "Fabric",
+                "name": obj.fabric.name
+            })
 
-        elif isinstance(current, Location):
-            if current.fabric and current.fabric.id not in visited:
-                visited.add(current.fabric.id)
-                result["parent"].append({"id": current.fabric.id, "name": current.fabric.name, "type": Fabric.__name__})
+        children_list = [{
+            "id": eq.id,
+            "type": "Equipment",
+            "name": eq.name
+        } for eq in obj.equipment]
 
-    async def recurse_children(current):
-        nonlocal visited
-        if isinstance(current, Fabric):
-            stmt = (
-                select(Location)
-                .where(Location.fabric_id == current.id)
-                .options(selectinload(Location.equipment))
+    elif isinstance(obj, Fabric):
+        stmt = (
+            select(Fabric)
+            .options(
+                selectinload(Fabric.locations)
+                .selectinload(Location.equipment)
             )
-            locations = (await session.execute(stmt)).scalars().all()
+            .where(Fabric.id == obj.id)
+        )
+        result = await session.execute(stmt)
+        obj = result.scalar_one()
 
-            for loc in locations:
-                if loc.id not in visited:
-                    visited.add(loc.id)
-                    result["children"].append({"id": loc.id, "name": loc.name, "type": Location.__name__})
-                    await recurse_children(loc)
+        for loc in obj.locations:
+            children_list.append({
+                "id": loc.id,
+                "type": "Location",
+                "name": loc.name
+            })
 
-        elif isinstance(current, Location):
-            stmt = (
-                select(Equipment)
-                .join(Location.equipment)
-                .where(Location.id == current.id)
-            )
-            equipments = (await session.execute(stmt)).scalars().all()
+            for eq in loc.equipment:
+                children_list.append({
+                    "id": eq.id,
+                    "type": "Equipment",
+                    "name": eq.name
+                })
 
-            for eq in equipments:
-                if eq.id not in visited:
-                    visited.add(eq.id)
-                    result["children"].append({"id": eq.id, "name": eq.name, "type": Equipment.__name__})
-
-    await recurse_parent(obj)
-    await recurse_children(obj)
-    return result
+    return {
+        "parent": parent_chain,
+        "children": children_list
+    }
