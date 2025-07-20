@@ -36,5 +36,17 @@ services:
     depends_on:
       - db_supp
 
+  frontend_supp:
+    build:
+      context: ./frontend_supp
+      dockerfile: Dockerfile
+    container_name: react-frontend-supp
+    volumes:
+      - ./frontend_supp:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend_supp
+
 volumes:
   db-data:
