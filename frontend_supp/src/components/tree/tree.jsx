@@ -4,7 +4,6 @@ const Tree = ({ data }) => {
   if (!data || !data.tree) {
     return <div>Нет данных</div>;
   }
-    console.log(data)
   const renderParentChain = () => {
     if (!data.tree.parent || data.tree.parent.length === 0) {
       return null;
