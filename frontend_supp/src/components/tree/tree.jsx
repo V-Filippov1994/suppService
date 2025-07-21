@@ -8,7 +8,6 @@ const Tree = ({ data }) => {
     if (!data.tree.parent || data.tree.parent.length === 0) {
       return null;
     }
-
     return (
       <div style={{ marginBottom: "20px" }}>
         <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
@@ -16,9 +15,9 @@ const Tree = ({ data }) => {
         </div>
         {data.tree.parent.map((parent, index) => (
           <div
-            key={parent.id}
+            key={index}
             style={{
-              marginLeft: `${index * 20}px`,
+              marginLeft: parent.type === "Fabric" ? "30px" : "20px",
               display: "flex",
               alignItems: "center"
             }}
@@ -44,9 +43,9 @@ const Tree = ({ data }) => {
         <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
           Дочерние элементы:
         </div>
-        {data.tree.children.map((child) => (
+        {data.tree.children.map((child, index) => (
           <div
-            key={child.id}
+            key={index}
             style={{
               marginLeft:child.type === "Location" ? "20px" : "30px",
               display: "flex",

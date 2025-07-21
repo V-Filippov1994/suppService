@@ -40,6 +40,9 @@ const LocationForm = () => {
                 setError(response.data.error);
             } else {
                 setSuccess('Участок успешно добавлен')
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             }
         }
         else {

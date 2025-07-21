@@ -22,6 +22,9 @@ const FabricForm = () => {
                 setError(response.data.error);
             } else {
                 setSuccess('Фабрика успешно добавлена')
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             }
         }
         else {

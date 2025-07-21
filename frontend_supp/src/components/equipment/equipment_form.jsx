@@ -50,13 +50,16 @@ const EquipmentForm = () => {
       } else {
         setSuccess("Оборудование успешно добавлено");
         setSelectedLocationIds([]);
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+
       }
     } catch (e) {
       setError("Ошибка при сохранении");
     }
   };
 
-    console.log(locations)
     return (
         <div>
             <form onSubmit={handleSubmit}>
